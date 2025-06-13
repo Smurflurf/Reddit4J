@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.gson.reflect.TypeToken;
 import masecla.reddit4j.objects.KarmaBreakdown;
+import masecla.reddit4j.objects.RedditComment;
 import masecla.reddit4j.objects.RedditData;
 import masecla.reddit4j.objects.RedditListing;
 import masecla.reddit4j.objects.RedditPost;
@@ -459,6 +460,15 @@ public class Reddit4J {
                 .data("action", "unsub")
                 .data("sr_name", subreddit);
         this.httpClient.execute(connection);
+    }
+    
+    /**
+     * Marks a comment as read in the clients notification box.
+     * @param comment
+     * @return
+     */
+    public boolean markCommentAsRead(RedditComment comment) {
+    	return new MarkCommentNotificationAsReadRequest(this, comment).execute();
     }
 
     public SubredditPostListingEndpointRequest getSubredditPosts(String subreddit, Sorting sorting) {
