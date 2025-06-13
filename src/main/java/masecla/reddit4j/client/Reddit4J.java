@@ -505,6 +505,24 @@ public class Reddit4J {
     	return new MarkCommentNotificationAsReadRequest(this, comment).execute();
     }
 
+    public Optional<RedditComment> getComment(String fullname) throws IOException, InterruptedException {
+	    if (!fullname.startsWith("t1_")) {
+	        fullname = "t1_" + fullname;
+	    }
+
+	    Connection connection = useEndpoint("/api/info").data("id", fullname);
+	    Response response = connection.execute();
+
+	    TypeToken<?> ttComment = TypeToken.getParameterized(RedditData.class, RedditComment.class);
+	    TypeToken<?> ttListing = TypeToken.getParameterized(RedditListing.class, ttComment.getType());
+	    TypeToken<?> ttData = TypeToken.getParameterized(RedditData.class, ttListing.getType());
+
+	    Gson gson = new Gson();
+	    RedditData<RedditListing<RedditData<RedditComment>>> fromJson = gson.fromJson(response.body(), ttData.getType());
+
+	    return fromJson.getData().getChildren().stream().findFirst().map(RedditData::getData);
+	}
+    
     public SubredditPostListingEndpointRequest getSubredditPosts(String subreddit, Sorting sorting) {
         return new SubredditPostListingEndpointRequest("/r/" + subreddit + "/" + sorting.getValue(), this);
     }
