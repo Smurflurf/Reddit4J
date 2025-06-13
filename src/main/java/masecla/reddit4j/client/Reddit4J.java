@@ -13,8 +13,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.jsoup.Connection;
+import org.jsoup.Connection.Method;
+import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
+import masecla.reddit4j.exceptions.AuthenticationException;
+import masecla.reddit4j.http.GenericHttpClient;
+import masecla.reddit4j.http.clients.RateLimitedClient;
 import masecla.reddit4j.objects.KarmaBreakdown;
 import masecla.reddit4j.objects.RedditComment;
 import masecla.reddit4j.objects.RedditData;
@@ -25,22 +37,15 @@ import masecla.reddit4j.objects.RedditTrophy;
 import masecla.reddit4j.objects.RedditUser;
 import masecla.reddit4j.objects.Sorting;
 import masecla.reddit4j.objects.Vote;
-import masecla.reddit4j.requests.*;
-import org.jsoup.Connection;
-import org.jsoup.Connection.Method;
-import org.jsoup.Connection.Response;
-import org.jsoup.Jsoup;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import masecla.reddit4j.exceptions.AuthenticationException;
-import masecla.reddit4j.http.GenericHttpClient;
-import masecla.reddit4j.http.clients.RateLimitedClient;
 import masecla.reddit4j.objects.preferences.RedditPreferences;
 import masecla.reddit4j.objects.subreddit.RedditSubreddit;
+import masecla.reddit4j.requests.MarkCommentNotificationAsReadRequest;
+import masecla.reddit4j.requests.RedditCommentListingEndpointRequest;
+import masecla.reddit4j.requests.RedditPreferencesUpdateRequest;
+import masecla.reddit4j.requests.RedditSearchListingEndpointRequest;
+import masecla.reddit4j.requests.RedditUserCommentListingEndpointRequest;
+import masecla.reddit4j.requests.RedditUserListingEndpointRequest;
+import masecla.reddit4j.requests.SubredditPostListingEndpointRequest;
 
 public class Reddit4J {
 
@@ -505,6 +510,22 @@ public class Reddit4J {
     	return new MarkCommentNotificationAsReadRequest(this, comment).execute();
     }
 
+	/**
+	 * Returns the post the comment was posted below.
+	 * @param comment to get parent post
+	 * @return parent post of comment
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public RedditPost getParentPost(RedditComment comment) throws IOException, InterruptedException {
+		RedditComment copy = comment;
+		while(copy.getParentId().contains("t1")) {
+			String fullName = copy.getParentId();
+			copy = getComment(fullName).get();
+		}
+		return getPost(copy.getParentId()).get();
+	}
+    
     public Optional<RedditComment> getComment(String fullname) throws IOException, InterruptedException {
 	    if (!fullname.startsWith("t1_")) {
 	        fullname = "t1_" + fullname;
