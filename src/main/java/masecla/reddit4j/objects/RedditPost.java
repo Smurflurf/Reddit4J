@@ -214,7 +214,19 @@ public class RedditPost extends RedditThing implements RedditPostActions, Reddit
      */
     @SerializedName("created_utc")
 	private long createdUtc;
-
+    
+    /**
+     * The type of post, i.e. link, text, image or video, ...
+     */
+    @SerializedName("post_hint")
+    private String postHint;
+    
+    /**
+     * Contains the full name of the parent post, in case this RedditPost is a crosspost
+     */
+    @SerializedName("crosspost_parent")
+    private String crosspostParent;
+    
     @Override
     public void upvote() throws IOException, InterruptedException {
         this.client.upvote(this.name);
