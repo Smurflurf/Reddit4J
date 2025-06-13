@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.google.gson.reflect.TypeToken;
+
 import masecla.reddit4j.objects.KarmaBreakdown;
 import masecla.reddit4j.objects.RedditComment;
 import masecla.reddit4j.objects.RedditData;
@@ -462,10 +463,43 @@ public class Reddit4J {
         this.httpClient.execute(connection);
     }
     
+
+	/**
+	 * Comments a reply comment below a given parent comment.
+	 * Marks the comment as read, if answered without errors.
+	 * @param parent
+	 * @param comment
+     * @return {@code true} if the comment was posted, {@code false} otherwise
+	 */
+	public boolean comment(RedditComment parent, String comment) {
+		Connection connection = useEndpoint("/api/comment")
+                .method(Connection.Method.POST)
+                .data("thing_id", parent.getName())
+                .data("text", comment)
+                .data("api_type", "json");
+		
+		try {
+			Response response = connection.execute();
+			
+			String responseBody = response.body();
+			JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+	        if (jsonResponse.has("json") && jsonResponse.getAsJsonObject("json").has("errors")) {
+	            JsonArray errors = jsonResponse.getAsJsonObject("json").getAsJsonArray("errors");
+	            if (errors.size() > 0) {
+	                return false;
+	            }
+	        }
+	        markCommentAsRead(parent);
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+    
     /**
      * Marks a comment as read in the clients notification box.
      * @param comment
-     * @return
+     * @return {@code true} if the notification was marked as read, {@code false} otherwise
      */
     public boolean markCommentAsRead(RedditComment comment) {
     	return new MarkCommentNotificationAsReadRequest(this, comment).execute();
